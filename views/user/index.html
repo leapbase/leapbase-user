@@ -1,0 +1,36 @@
+{% extends '../layout/layout.html' %}
+
+{% block script %}
+{{ super() }}
+<script>
+  var app = app || {};
+</script>
+<script src="/script/user/index.js"></script>
+{% endblock %}
+
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="/style/user/index.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <div class="row">
+    <div class="col-md-9">
+      <h4 class="title-text text-muted">user</h4>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-9">
+      User Home
+    </div>
+    <div class="col-md-3">
+      <div class="panel-right">
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

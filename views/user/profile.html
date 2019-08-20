@@ -1,0 +1,35 @@
+{% extends '../layout/layout.html' %}
+
+{% block script %}
+{{ super() }}
+<!-- <script src="/script/user/profile.js"></script> -->
+{% endblock %}
+
+{% block style %}
+{{ super() }}
+<!-- <link rel="stylesheet" href="/style/user/profile.css"> -->
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <h4>User Profile</h4>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-8">
+            <p>username: {{ page.user.username }}</p>
+            <p>email: {{ page.user.email }}</p>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-8">
+            <p>API token:</p>
+            <p style="word-wrap: break-word;">{{ page.user.api_token }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

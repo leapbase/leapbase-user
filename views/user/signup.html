@@ -1,0 +1,57 @@
+{% extends '../layout/layout.html' %}
+
+{% block script %}
+{{ super() }}
+<!-- <script src="/script/user/signup.js"></script> -->
+{% endblock %}
+
+{% block style %}
+{{ super() }}
+<!-- <link rel="stylesheet" href="/style/user/signup.css"> -->
+<style>
+.container {
+    color: #666;
+}
+.signup-form {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <div class="row">
+    <div class="col" style="margin:20px auto;font-size:2.1em;color:#666;">
+      <div style="text-align:center;">User Signup</div>
+    </div>
+  </div>
+
+  <div class="row signup-form">
+    <div class="col"></div>
+    <div class="col-sm-8 col-md-6 col-lg-4">
+      <form role="form" action="/user/signup" method="POST">
+        <div class="form-group">
+          <label for="email" class="form-title">Email</label>
+          <input type="email" class="form-control" name="email" id="email" placeholder="" required>
+        </div>
+        <div class="form-group">
+          <label for="password" class="form-title">Password</label>
+          <input type="password" class="form-control" name="password" id="password" placeholder="" required>
+        </div>
+        <div class="form-group">
+          <label for="invite_code" class="form-title">Invite Code</label>
+          <input type="text" class="form-control" name="invite_code" id="invite_code" placeholder="" required>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg btn-block">SIGN UP</button>
+        <div style="margin-top:40px;text-align:center;">
+          Already have account? <a href="/user/login">Login here</a>
+        </div>
+      </form>
+    </div>
+    <div class="col"></div>
+  </div>
+
+</div>
+{% endblock %}

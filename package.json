@@ -1,0 +1,8 @@
+{
+  "name": "user",
+  "dependencies": {
+  },
+  "scripts": {
+    "test_user": "find -L ./test -name 'user_test.js' | xargs mocha -R spec"
+  }
+}

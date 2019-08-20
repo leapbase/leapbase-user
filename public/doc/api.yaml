@@ -1,0 +1,29 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: Item API
+  description: validate and convert Json input
+
+schemes:
+  - http
+host: leapbase.com
+basePath: /item
+
+paths:
+  /convert:
+    post:
+      summary: Item Convert
+      description: Convert input and return result in JSON format
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: input
+          description: text input
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: successful operation
