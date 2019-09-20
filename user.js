@@ -8,14 +8,12 @@ module.exports = function(app) {
 
   var module_name = 'user';
   app.eventEmitter.emit('extension::init', module_name);
-  
-  var block = {
-    app: app,
-    role: 'admin',
-    description: 'user management module',
-    tags: ['system'],
-    depends: ['email']
-  };
+
+  var block = tool.object(require('base')(app, module_name));
+  block.role = 'admin';
+  block.description ='user management',
+  block.tags = ['system'];
+  block.depends = ['email'];
 
   block.data = tool.object(require('basedata')(app, module_name));
   block.page = tool.object(require('basepage')(app, module_name, block.data));
