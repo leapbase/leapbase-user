@@ -8,17 +8,22 @@ module.exports = function(app) {
 
   var module_name = 'user';
   app.eventEmitter.emit('extension::init', module_name);
-  
+
   var block = tool.object(require('base')(app, module_name));
   block.role = 'admin';
   block.description ='user management',
   block.tags = ['system'];
   block.depends = ['email'];
-  
+
   block.data = tool.object(require('basedata')(app, module_name));
   block.page = tool.object(require('basepage')(app, module_name, block.data));
 
   block.model = {
+    id: { 
+      type: 'string', 
+      default_value: '',
+      config:{ auto:true } 
+    },
     username: {
       type: 'string',
       required: true
@@ -62,7 +67,7 @@ module.exports = function(app) {
       config:{ auto:true }
     },
     api_token: {
-      type: 'string', // jwt token containing use id
+      type: 'string', // jwt token
       config:{ auto:true }
     },
     roles: {
@@ -89,7 +94,7 @@ module.exports = function(app) {
     list_fields: ['username', 'firstname', 'lastname', 'email', 'status'],
     search_fields: ['username', 'email', 'status']
   };
-  
+
   block.getPasswordResetKey = function(user) {
     var userId = user._id + '';
     var currentTime =  (new Date()).valueOf();
@@ -99,10 +104,49 @@ module.exports = function(app) {
     return key;
   };
   
+  block.login = function(email, password, callback) {
+    var condition = { email:email };
+    var filter = {};
+    app.db.find(module_name, condition, {}, function(error, docs, info) {
+      var authenticated = false;
+      var user = docs && docs[0] || null;
+      if (user) {
+        var passwordHash = tool.hash(this.password + user.salt);
+        var message = '';
+        if (passwordHash === user.password) {
+          message = email + ' passes login';
+          authenticated = true;
+        } else {
+          message = email + ' fails login';
+        }
+      }
+      info = { success:authenticated, message:message };
+      callback && callback(error, user, info);
+    }.bind({ email, password }));
+  };
+  
+  block.findById = function(id, callback) {
+    var condition = { _id:id };
+    var filter = {};
+    app.db.find(module_name, condition, filter, function(error, docs, info) {
+      var user = docs && docs[0] || null;
+      callback && callback(error, user);
+    });
+  };
+  
+  block.findByUsername = function(username, callback) {
+    var condition = { username:username };
+    var filter = {};
+    app.db.find(module_name, condition, filter, function(error, docs, info) {
+      var user = docs && docs[0] || null;
+      callback && callback(error, user);
+    });
+  };
+  
   block.test = function() {
     return 'user test';
   };
-  
+
   // data
   block.data.getItemWeb = function(req, res, next) {
     var callback = arguments[3] || null;
@@ -153,9 +197,6 @@ module.exports = function(app) {
     block.data.add(req, res, user, function(error, docs, info) {
       var user = docs && docs[0];
       debug('user created:', JSON.stringify(user));
-      if (req.session) {
-        req.session.user = user;
-      }
       app.cb(error, docs, info, req, res, callback);
     });
   };
@@ -163,7 +204,13 @@ module.exports = function(app) {
   block.data.login = function(req, res, next) {
     var callback = arguments[3] || null;
     var parameter = tool.getReqParameter(req);
-    var email = parameter.email || '';
+    
+    
+    // block.login(parameter.email, parameter.password, function(error, user, info) {
+    //   app.cb(error, user, info, req, res, callback);
+    // });
+    
+    var email = parameter.email;
     var condition = { email:email };
     var filter = {};
     block.data.get(req, res, condition, filter, function(error, docs, info) {
@@ -172,6 +219,14 @@ module.exports = function(app) {
       if (user) {
         var password = tool.hash(parameter.password + user.salt);
         var message = '';
+        
+        console.log('>>> user:', user);
+        console.log('>>> parameter.password:', parameter.password);
+        console.log('>>> user.salt:', user.salt);
+        
+        console.log('>>> password hash:', password);
+        console.log('>>> user.password hash:', user.password);
+        
         if (password === user.password) {
           message = email + ' passes login';
           authenticated = true;
@@ -182,6 +237,7 @@ module.exports = function(app) {
       info = { success:authenticated, message:message };
       app.cb(error, user, info, req, res, callback);
     })
+    
   };
 
   // page
@@ -195,6 +251,7 @@ module.exports = function(app) {
     var parameter = tool.getReqParameter(req);
     block.data.login(req, res, null, function(error, user, info) {
       if (info.success) {
+        // req.isAuthenticated = true;
         if (req.session) {
           delete user.salt;
           delete user.password;
@@ -203,6 +260,7 @@ module.exports = function(app) {
         var nextUrl = parameter.redirect || '/';
         res.redirect(nextUrl);
       } else {
+        // req.isAuthenticated = false;
         var text = 'Login failed';
         info = {
           message: 'Incorrect username or password'
@@ -242,6 +300,10 @@ module.exports = function(app) {
           app.renderInfoPage(error, docs, info, req, res);
         } else {
           var user = docs && docs[0];
+          if (req.session) {
+            // req.isAuthenticated = true;
+            req.session.user = user;
+          }
           var nextUrl = parameter.redirect || '/';
           res.redirect(nextUrl);
         }
@@ -250,6 +312,7 @@ module.exports = function(app) {
   };
 
   block.page.logout = function(req, res) {
+    // req.isAuthenticated = false;
     if (req.session) {
       req.session.user = null;
     }
@@ -298,7 +361,7 @@ module.exports = function(app) {
       if (user) {
         // send notification email to user
         var passwordResetKey = block.getPasswordResetKey(user);
-        var passwordResetUrl = app.setting.webserver_baseurl + 
+        var passwordResetUrl = app.setting.webserver_baseurl +
           '/user/password/reset?key=' + passwordResetKey;
         debug('passwordResetUrl:', passwordResetUrl);
         var email = {
